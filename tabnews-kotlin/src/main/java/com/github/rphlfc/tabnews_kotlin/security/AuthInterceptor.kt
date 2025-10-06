@@ -1,7 +1,6 @@
 package com.github.rphlfc.tabnews_kotlin.security
 
 import com.github.rphlfc.tabnews_kotlin.api.AuthRequired
-import com.github.rphlfc.tabnews_kotlin.security.TokenProvider
 import okhttp3.Interceptor
 import okhttp3.Response
 import retrofit2.Invocation

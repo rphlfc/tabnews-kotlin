@@ -7,6 +7,7 @@ import com.github.rphlfc.tabnews_kotlin.model.LoginRequest
 import com.github.rphlfc.tabnews_kotlin.model.LoginResponse
 import com.github.rphlfc.tabnews_kotlin.model.TabcoinsRequest
 import com.github.rphlfc.tabnews_kotlin.model.User
+import com.github.rphlfc.tabnews_kotlin.model.TabcoinsResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -34,15 +35,15 @@ interface APIService {
     ): List<Content>
 
     @POST("api/v1/sessions")
-    suspend fun login(@Body loginRequest: LoginRequest): LoginResponse
+    suspend fun login(@Body request: LoginRequest): LoginResponse
 
     @AuthRequired
     @POST("api/v1/contents/{owner_username}/{slug}/tabcoins")
     suspend fun voteOnContent(
         @Path("owner_username") ownerUsername: String,
         @Path("slug") slug: String,
-        @Body tabcoinsRequest: TabcoinsRequest
-    )
+        @Body request: TabcoinsRequest
+    ): TabcoinsResponse
 
     @AuthRequired
     @GET("api/v1/user")
@@ -50,9 +51,9 @@ interface APIService {
 
     @AuthRequired
     @POST("api/v1/contents")
-    suspend fun createContent(@Body contentRequest: ContentRequest): Content
+    suspend fun createContent(@Body request: ContentRequest): Content
 
     @AuthRequired
     @POST("api/v1/contents")
-    suspend fun createComment(@Body commentRequest: CommentRequest): Content
+    suspend fun createComment(@Body request: CommentRequest): Content
 }

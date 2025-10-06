@@ -124,7 +124,7 @@ class APIClient private constructor(
     }
 
     val contentRepository: ContentRepository by lazy {
-        ContentRepositoryImpl(apiService, cacheManager, authManager)
+        ContentRepositoryImpl(apiService, cacheManager)
     }
 
     val authRepository: AuthRepository by lazy {
@@ -132,6 +132,6 @@ class APIClient private constructor(
     }
 
     val userRepository: UserRepository by lazy {
-        UserRepositoryImpl(apiService, authManager)
+        UserRepositoryImpl(apiService)
     }
 }

@@ -7,11 +7,16 @@ import com.github.rphlfc.tabnews_kotlin.cache.model.CachedPostDetail
 import com.github.rphlfc.tabnews_kotlin.model.CommentRequest
 import com.github.rphlfc.tabnews_kotlin.model.Content
 import com.github.rphlfc.tabnews_kotlin.model.ContentRequest
+import com.github.rphlfc.tabnews_kotlin.model.ErrorResponse
+import com.github.rphlfc.tabnews_kotlin.model.APIResult
 import com.github.rphlfc.tabnews_kotlin.model.TabcoinsRequest
+import com.github.rphlfc.tabnews_kotlin.model.TabcoinsResponse
 import com.github.rphlfc.tabnews_kotlin.model.TransactionType
-import com.github.rphlfc.tabnews_kotlin.security.AuthManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
+import retrofit2.HttpException
 
 interface ContentRepository {
     suspend fun getContents(
@@ -33,17 +38,19 @@ interface ContentRepository {
         ownerUsername: String,
         slug: String,
         transactionType: TransactionType
-    ): Result<Unit>
+    ): APIResult<TabcoinsResponse>
 
-    suspend fun createContent(contentRequest: ContentRequest): Result<Content>
+    suspend fun createContent(request: ContentRequest): Result<Content>
 
-    suspend fun createComment(commentRequest: CommentRequest): Result<Content>
+    suspend fun createComment(request: CommentRequest): Result<Content>
 }
 
 class ContentRepositoryImpl(
     private val api: APIService,
     private val cacheManager: CacheManager
 ) : ContentRepository {
+
+    private val json = Json { ignoreUnknownKeys = true; isLenient = true }
 
     override suspend fun getContents(
         page: Int,
@@ -162,28 +169,55 @@ class ContentRepositoryImpl(
         ownerUsername: String,
         slug: String,
         transactionType: TransactionType
-    ): Result<Unit> {
+    ): APIResult<TabcoinsResponse> {
         return try {
             withContext(Dispatchers.IO) {
-                val tabcoinsRequest = TabcoinsRequest(transactionType = transactionType.rawValue)
+                val request = TabcoinsRequest(transactionType = transactionType.rawValue)
 
-                api.voteOnContent(
+                val response = api.voteOnContent(
                     ownerUsername = ownerUsername,
                     slug = slug,
-                    tabcoinsRequest = tabcoinsRequest
+                    request = request
                 )
 
-                Result.success(Unit)
+                APIResult.Success(response)
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            val error = when (e) {
+                is HttpException -> {
+                    try {
+                        val errorBody = e.response()?.errorBody()?.string()
+                        if (errorBody != null) {
+                            json.decodeFromString<ErrorResponse>(errorBody)
+                        } else {
+                            ErrorResponse(
+                                name = "HttpError",
+                                message = "Erro HTTP ${e.code()}: ${e.message()}",
+                                statusCode = e.code()
+                            )
+                        }
+                    } catch (_: Exception) {
+                        ErrorResponse(
+                            name = "HttpError",
+                            message = "Erro HTTP ${e.code()}: ${e.message()}",
+                            statusCode = e.code()
+                        )
+                    }
+                }
+                else -> ErrorResponse(
+                    name = "UnexpectedError",
+                    message = e.message ?: "Erro ao votar. Tente novamente.",
+                    statusCode = -1
+                )
+            }
+            APIResult.Failure(error)
         }
     }
 
-    override suspend fun createContent(contentRequest: ContentRequest): Result<Content> {
+    override suspend fun createContent(request: ContentRequest): Result<Content> {
         return try {
             withContext(Dispatchers.IO) {
-                val content = api.createContent(contentRequest)
+                val content = api.createContent(request)
                 Result.success(content)
             }
         } catch (e: Exception) {
@@ -191,10 +225,10 @@ class ContentRepositoryImpl(
         }
     }
 
-    override suspend fun createComment(commentRequest: CommentRequest): Result<Content> {
+    override suspend fun createComment(request: CommentRequest): Result<Content> {
         return try {
             withContext(Dispatchers.IO) {
-                val content = api.createComment(commentRequest)
+                val content = api.createComment(request)
                 Result.success(content)
             }
         } catch (e: Exception) {
