@@ -61,7 +61,7 @@ data class CachedPostDetail(
                 deleted_at = content.deletedAt,
                 tabcoins = content.tabcoins,
                 owner_username = content.ownerUsername,
-                children_deep_count = content.childrenDeepCount
+                children_deep_count = content.childrenDeepCount ?: 0
             )
         }
     }

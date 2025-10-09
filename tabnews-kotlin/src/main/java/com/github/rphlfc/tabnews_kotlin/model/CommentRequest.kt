@@ -8,5 +8,5 @@ data class CommentRequest(
     @SerialName("parent_id")
     val parentId: String,
     val body: String,
-    val status: String = "published"
+    val status: String
 )

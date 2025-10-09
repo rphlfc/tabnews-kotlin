@@ -35,5 +35,5 @@ data class Content(
     val ownerUsername: String,
     val children: List<Content>? = null,
     @SerialName("children_deep_count")
-    val childrenDeepCount: Int
+    val childrenDeepCount: Int? = null
 ) : JavaSerializable

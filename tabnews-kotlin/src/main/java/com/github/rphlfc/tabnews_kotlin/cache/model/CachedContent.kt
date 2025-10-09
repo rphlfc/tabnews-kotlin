@@ -21,7 +21,7 @@ data class CachedContent(
     val deleted_at: String?,
     val tabcoins: Int,
     val owner_username: String,
-    val children_deep_count: Int,
+    val children_deep_count: Int?,
     val strategy: String,
     val page: Int,
     val cached_at: Long = System.currentTimeMillis()
