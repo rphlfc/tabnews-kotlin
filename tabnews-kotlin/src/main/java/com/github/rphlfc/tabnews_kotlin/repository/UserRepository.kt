@@ -14,7 +14,7 @@ interface UserRepository {
     suspend fun getLoggedUser(): APIResult<User>
 }
 
-class UserRepositoryImpl(
+internal class UserRepositoryImpl(
     private val api: APIService
 ) : UserRepository {
 

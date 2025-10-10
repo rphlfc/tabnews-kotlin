@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ContentRequest(
+internal data class ContentRequest(
     val title: String,
     val body: String,
     val status: String = "published",

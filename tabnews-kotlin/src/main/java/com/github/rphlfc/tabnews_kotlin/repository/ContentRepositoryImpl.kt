@@ -10,6 +10,7 @@ import com.github.rphlfc.tabnews_kotlin.model.Content
 import com.github.rphlfc.tabnews_kotlin.model.ContentRequest
 import com.github.rphlfc.tabnews_kotlin.model.ErrorResponse
 import com.github.rphlfc.tabnews_kotlin.model.PublishStatus
+import com.github.rphlfc.tabnews_kotlin.model.Strategy
 import com.github.rphlfc.tabnews_kotlin.model.TabcoinsRequest
 import com.github.rphlfc.tabnews_kotlin.model.TabcoinsResponse
 import com.github.rphlfc.tabnews_kotlin.model.TransactionType
@@ -18,7 +19,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import retrofit2.HttpException
 
-class ContentRepositoryImpl(
+internal class ContentRepositoryImpl(
     private val api: APIService,
     private val cacheManager: CacheManager
 ) : ContentRepository {
@@ -71,37 +72,36 @@ class ContentRepositoryImpl(
     override suspend fun getContents(
         page: Int,
         perPage: Int,
-        strategy: String,
+        strategy: Strategy,
         clearCache: Boolean
     ): APIResult<List<Content>> {
         if (clearCache) {
-            refreshContents(strategy)
+            refreshContents(strategy.param)
         }
 
         return try {
             withContext(Dispatchers.IO) {
-                val cachedContents = cacheManager.getContents(strategy, page)
+                val cachedContents = cacheManager.getContents(strategy.param, page)
 
                 if (cachedContents != null && cachedContents.isNotEmpty()) {
                     val contents = cachedContents.map { it.toContent() }
                     APIResult.Success(contents)
                 } else {
                     val contents =
-                        api.getContents(page = page, perPage = perPage, strategy = strategy)
+                        api.getContents(page = page, perPage = perPage, strategy = strategy.param)
 
                     val cachedContentsToStore = contents.map { content ->
-                        CachedContent.fromContent(content, strategy, page)
+                        CachedContent.fromContent(content, strategy.param, page)
                     }
-                    cacheManager.cacheContents(cachedContentsToStore, strategy, page)
+                    cacheManager.cacheContents(cachedContentsToStore, strategy.param, page)
 
                     APIResult.Success(contents)
                 }
             }
         } catch (e: Exception) {
             val error = mapExceptionToError(e, "Erro ao carregar conteúdos.")
-            // Try serve cached data on error
             return try {
-                val cachedContents = cacheManager.getContents(strategy, page)
+                val cachedContents = cacheManager.getContents(strategy.param, page)
                 if (cachedContents != null && cachedContents.isNotEmpty()) {
                     val contents = cachedContents.map { it.toContent() }
                     APIResult.Success(contents)
@@ -152,7 +152,6 @@ class ContentRepositoryImpl(
             }
         } catch (e: Exception) {
             val error = mapExceptionToError(e, "Erro ao carregar detalhes do post.")
-            // Try serve cached data on error
             return try {
                 val cachedPostDetail =
                     cacheManager.getPostDetailByUsernameAndSlug(ownerUsername, slug)
@@ -188,13 +187,9 @@ class ContentRepositoryImpl(
         slug: String,
         transactionType: TransactionType
     ): APIResult<TabcoinsResponse> {
+        val request = TabcoinsRequest(transactionType = transactionType.rawValue)
         return executeApiCall("Erro ao votar. Tente novamente.") {
-            val request = TabcoinsRequest(transactionType = transactionType.rawValue)
-            api.voteOnContent(
-                ownerUsername = ownerUsername,
-                slug = slug,
-                request = request
-            )
+            api.voteOnContent(ownerUsername = ownerUsername, slug = slug, request = request)
         }
     }
 
@@ -203,17 +198,20 @@ class ContentRepositoryImpl(
         body: String,
         status: PublishStatus
     ): APIResult<Content> {
+        val request = CommentRequest(parentId = parent.id, body = body, status = status.rawValue)
         return executeApiCall("Erro ao criar comentário.") {
-            val request = CommentRequest(
-                parentId = parent.id,
-                body = body,
-                status = status.rawValue
-            )
             api.createComment(request)
         }
     }
 
-    override suspend fun createContent(request: ContentRequest): APIResult<Content> {
+    override suspend fun createContent(
+        title: String,
+        body: String,
+        slug: String?,
+        sourceUrl: String?,
+        status: PublishStatus
+    ): APIResult<Content> {
+        val request = ContentRequest(title, body, status.rawValue, sourceUrl, slug)
         return executeApiCall("Erro ao criar conteúdo.") {
             api.createContent(request)
         }

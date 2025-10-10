@@ -12,7 +12,7 @@ interface AuthRepository {
     suspend fun logout()
 }
 
-class AuthRepositoryImpl(
+internal class AuthRepositoryImpl(
     private val api: APIService,
     private val authManager: AuthManager
 ) : AuthRepository {

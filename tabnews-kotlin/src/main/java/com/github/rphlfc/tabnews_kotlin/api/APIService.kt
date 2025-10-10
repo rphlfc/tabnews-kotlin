@@ -14,7 +14,7 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-interface APIService {
+internal interface APIService {
     @GET("api/v1/contents")
     suspend fun getContents(
         @Query("page") page: Int,

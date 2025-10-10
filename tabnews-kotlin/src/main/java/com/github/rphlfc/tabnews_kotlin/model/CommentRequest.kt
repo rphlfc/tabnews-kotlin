@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class CommentRequest(
+internal data class CommentRequest(
     @SerialName("parent_id")
     val parentId: String,
     val body: String,

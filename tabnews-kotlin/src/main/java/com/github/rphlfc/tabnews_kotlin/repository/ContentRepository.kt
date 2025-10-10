@@ -2,16 +2,16 @@ package com.github.rphlfc.tabnews_kotlin.repository
 
 import com.github.rphlfc.tabnews_kotlin.model.APIResult
 import com.github.rphlfc.tabnews_kotlin.model.Content
-import com.github.rphlfc.tabnews_kotlin.model.ContentRequest
 import com.github.rphlfc.tabnews_kotlin.model.PublishStatus
+import com.github.rphlfc.tabnews_kotlin.model.Strategy
 import com.github.rphlfc.tabnews_kotlin.model.TabcoinsResponse
 import com.github.rphlfc.tabnews_kotlin.model.TransactionType
 
 interface ContentRepository {
     suspend fun getContents(
-        page: Int,
+        page: Int = 1,
         perPage: Int = 20,
-        strategy: String = "relevant",
+        strategy: Strategy = Strategy.RELEVANT,
         clearCache: Boolean = false
     ): APIResult<List<Content>>
 
@@ -39,6 +39,10 @@ interface ContentRepository {
     ): APIResult<Content>
 
     suspend fun createContent(
-        request: ContentRequest
+        title: String,
+        body: String,
+        slug: String? = null,
+        sourceUrl: String? = null,
+        status: PublishStatus = PublishStatus.PUBLISHED
     ): APIResult<Content>
 }
