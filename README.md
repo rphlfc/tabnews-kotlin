@@ -8,7 +8,7 @@ Add the following to your `build.gradle.kts` (module level):
 
 ```kotlin
 dependencies {
-    implementation("com.github.rphlfc:tabnews-kotlin:1.0.0")
+    implementation("com.github.rphlfc:tabnews-kotlin:1.0.1")
 }
 ```
 
@@ -323,4 +323,17 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## Support
 
 For issues and questions, please open an issue on the GitHub repository.
+
+## Changelog
+
+### 1.0.1
+- BREAKING: `ContentRepository` methods now return `APIResult<T>` instead of `Result<T>`:
+  - `getContents`, `getPostDetail`, `getComments`, `createContent`, `createComment`.
+- Standardized error model: failures carry an `ErrorResponse` with fields `name`, `message`, `statusCode`, and optional `action`, `errorId`, `requestId`.
+- Improved caching behavior on failures:
+  - `getContents` and `getPostDetail` return cached data (if available) as `APIResult.Success`; otherwise `APIResult.Failure`.
+- Internal refactor: centralized error parsing and API call handling to reduce duplication.
+
+### 1.0.0
+- Initial release with content retrieval, authentication, user profile, content creation, comments, and voting support.
 
