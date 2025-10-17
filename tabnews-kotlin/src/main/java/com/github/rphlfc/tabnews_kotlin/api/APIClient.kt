@@ -1,6 +1,5 @@
 package com.github.rphlfc.tabnews_kotlin.api
 
-
 import android.content.Context
 import com.github.rphlfc.tabnews_kotlin.cache.CacheDatabase
 import com.github.rphlfc.tabnews_kotlin.cache.manager.CacheCleanupManager
@@ -120,7 +119,7 @@ class APIClient private constructor(
     }
 
     val authManager: AuthManager by lazy {
-        AuthManager(tokenProvider, ioDispatcher = config.dispatcher)
+        AuthManager(tokenProvider)
     }
 
     val contentRepository: ContentRepository by lazy {

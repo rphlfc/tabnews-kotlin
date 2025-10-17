@@ -6,8 +6,8 @@ import com.github.rphlfc.tabnews_kotlin.model.ContentRequest
 import com.github.rphlfc.tabnews_kotlin.model.LoginRequest
 import com.github.rphlfc.tabnews_kotlin.model.LoginResponse
 import com.github.rphlfc.tabnews_kotlin.model.TabcoinsRequest
-import com.github.rphlfc.tabnews_kotlin.model.User
 import com.github.rphlfc.tabnews_kotlin.model.TabcoinsResponse
+import com.github.rphlfc.tabnews_kotlin.model.User
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST

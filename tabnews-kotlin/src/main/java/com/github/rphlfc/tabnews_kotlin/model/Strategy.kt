@@ -4,12 +4,6 @@ enum class Strategy(
     val title: String,
     val param: String
 ) {
-    RELEVANT(
-        title = "Relevantes",
-        param = "relevant"
-    ),
-    NEW(
-        title = "Recentes", 
-        param = "new"
-    )
+    RELEVANT(title = "Relevantes", param = "relevant"),
+    NEW(title = "Recentes", param = "new")
 }

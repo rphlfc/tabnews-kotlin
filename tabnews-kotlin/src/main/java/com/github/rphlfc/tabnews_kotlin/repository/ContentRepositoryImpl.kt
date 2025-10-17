@@ -16,58 +16,12 @@ import com.github.rphlfc.tabnews_kotlin.model.TabcoinsResponse
 import com.github.rphlfc.tabnews_kotlin.model.TransactionType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
-import retrofit2.HttpException
 
 internal class ContentRepositoryImpl(
     private val api: APIService,
     private val cacheManager: CacheManager
 ) : ContentRepository {
 
-    private val json = Json { ignoreUnknownKeys = true; isLenient = true }
-
-    private fun parseHttpError(e: HttpException, defaultMessage: String): ErrorResponse {
-        return try {
-            val errorBody = e.response()?.errorBody()?.string()
-            if (errorBody != null) {
-                json.decodeFromString<ErrorResponse>(errorBody)
-            } else {
-                ErrorResponse(
-                    name = "HttpError",
-                    message = defaultMessage.ifEmpty { "Erro HTTP ${e.code()}: ${e.message()}" },
-                    statusCode = e.code()
-                )
-            }
-        } catch (_: Exception) {
-            ErrorResponse(
-                name = "HttpError",
-                message = defaultMessage.ifEmpty { "Erro HTTP ${e.code()}: ${e.message()}" },
-                statusCode = e.code()
-            )
-        }
-    }
-
-    private fun mapExceptionToError(e: Exception, defaultMessage: String): ErrorResponse {
-        return when (e) {
-            is HttpException -> parseHttpError(e, defaultMessage)
-            else -> ErrorResponse(
-                name = "UnexpectedError",
-                message = e.message ?: defaultMessage,
-                statusCode = -1
-            )
-        }
-    }
-
-    private suspend fun <T> executeApiCall(
-        defaultErrorMessage: String,
-        block: suspend () -> T
-    ): APIResult<T> {
-        return try {
-            withContext(Dispatchers.IO) { APIResult.Success(block()) }
-        } catch (e: Exception) {
-            APIResult.Failure(mapExceptionToError(e, defaultErrorMessage))
-        }
-    }
 
     override suspend fun getContents(
         page: Int,
@@ -99,7 +53,7 @@ internal class ContentRepositoryImpl(
                 }
             }
         } catch (e: Exception) {
-            val error = mapExceptionToError(e, "Erro ao carregar conteúdos.")
+            val error = ErrorHandler.mapExceptionToError(e, "Erro ao carregar conteúdos.")
             return try {
                 val cachedContents = cacheManager.getContents(strategy.param, page)
                 if (cachedContents != null && cachedContents.isNotEmpty()) {
@@ -151,7 +105,7 @@ internal class ContentRepositoryImpl(
                 }
             }
         } catch (e: Exception) {
-            val error = mapExceptionToError(e, "Erro ao carregar detalhes do post.")
+            val error = ErrorHandler.mapExceptionToError(e, "Erro ao carregar detalhes do post.")
             return try {
                 val cachedPostDetail =
                     cacheManager.getPostDetailByUsernameAndSlug(ownerUsername, slug)
@@ -177,7 +131,7 @@ internal class ContentRepositoryImpl(
         ownerUsername: String,
         slug: String
     ): APIResult<List<Content>> {
-        return executeApiCall("Erro ao carregar comentários.") {
+        return ErrorHandler.executeApiCall("Erro ao carregar comentários.") {
             api.getComments(ownerUsername, slug)
         }
     }
@@ -188,7 +142,7 @@ internal class ContentRepositoryImpl(
         transactionType: TransactionType
     ): APIResult<TabcoinsResponse> {
         val request = TabcoinsRequest(transactionType = transactionType.rawValue)
-        return executeApiCall("Erro ao votar. Tente novamente.") {
+        return ErrorHandler.executeApiCall("Erro ao votar. Tente novamente.") {
             api.voteOnContent(ownerUsername = ownerUsername, slug = slug, request = request)
         }
     }
@@ -199,7 +153,7 @@ internal class ContentRepositoryImpl(
         status: PublishStatus
     ): APIResult<Content> {
         val request = CommentRequest(parentId = parent.id, body = body, status = status.rawValue)
-        return executeApiCall("Erro ao criar comentário.") {
+        return ErrorHandler.executeApiCall("Erro ao criar comentário.") {
             api.createComment(request)
         }
     }
@@ -212,7 +166,7 @@ internal class ContentRepositoryImpl(
         status: PublishStatus
     ): APIResult<Content> {
         val request = ContentRequest(title, body, status.rawValue, sourceUrl, slug)
-        return executeApiCall("Erro ao criar conteúdo.") {
+        return ErrorHandler.executeApiCall("Erro ao criar conteúdo.") {
             api.createContent(request)
         }
     }
