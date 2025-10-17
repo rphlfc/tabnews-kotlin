@@ -21,7 +21,7 @@ abstract class CacheDatabase : RoomDatabase() {
     abstract fun cacheMetadataDao(): MetadataCacheDao
     abstract fun postDetailCacheDao(): PostDetailCacheDao
 
-    companion object Companion {
+    companion object {
         @Volatile
         private var INSTANCE: CacheDatabase? = null
         fun getDatabase(context: Context): CacheDatabase {

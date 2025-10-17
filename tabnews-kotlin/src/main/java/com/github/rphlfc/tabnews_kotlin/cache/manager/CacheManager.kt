@@ -15,9 +15,9 @@ class CacheManager(
     private val metadataDao = database.cacheMetadataDao()
     private val postDetailCacheDao = database.postDetailCacheDao()
 
-    companion object Companion {
-        private const val CACHE_EXPIRY_TIME = 5 * 60 * 1000L // 5 minutes
-        private const val MAX_CACHE_SIZE = 1000 // Maximum number of cached items
+    companion object {
+        private const val CACHE_EXPIRY_TIME = 5 * 60 * 1000L
+        private const val MAX_CACHE_SIZE = 1000
     }
 
     suspend fun getContents(strategy: String, page: Int): List<CachedContent>? {

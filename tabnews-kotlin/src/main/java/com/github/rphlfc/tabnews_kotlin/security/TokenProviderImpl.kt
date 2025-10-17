@@ -24,7 +24,7 @@ class TokenProviderImpl(context: Context) : TokenProvider {
         EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
     )
 
-    companion object Companion {
+    companion object {
         private const val KEY_AUTH_TOKEN = "auth_token"
         private const val KEY_USER_ID = "user_id"
         private const val KEY_TOKEN_EXPIRES_AT = "token_expires_at"
@@ -69,17 +69,13 @@ class TokenProviderImpl(context: Context) : TokenProvider {
     }
 
     override fun getToken(): String? {
-        val authToken = getAuthTokenFromPreferences()
-        return if (authToken != null) {
-            val isExpired = isTokenExpired()
-            if (!isExpired) {
-                authToken
-            } else {
-                clearToken()
-                return null
-            }
+        val authToken = getAuthTokenFromPreferences() ?: return null
+        
+        return if (!isTokenExpired()) {
+            authToken
         } else {
-            return null
+            clearToken()
+            null
         }
     }
 }

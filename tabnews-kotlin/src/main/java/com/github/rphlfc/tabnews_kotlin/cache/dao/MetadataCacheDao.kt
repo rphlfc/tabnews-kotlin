@@ -15,7 +15,7 @@ interface MetadataCacheDao {
     @Query("SELECT * FROM cached_metadata WHERE strategy = :strategy")
     suspend fun getMetadataByStrategy(strategy: String): List<CachedMetadata>
 
-    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMetadata(metadata: CachedMetadata)
 
     @Query("DELETE FROM cached_metadata WHERE key = :key")
