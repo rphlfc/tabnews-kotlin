@@ -49,7 +49,9 @@ internal object ErrorHandler {
         block: suspend () -> T
     ): APIResult<T> {
         return try {
-            withContext(Dispatchers.IO) { APIResult.Success(block()) }
+            withContext(Dispatchers.IO) {
+                APIResult.Success(block())
+            }
         } catch (e: Exception) {
             APIResult.Failure(mapExceptionToError(e, defaultErrorMessage))
         }

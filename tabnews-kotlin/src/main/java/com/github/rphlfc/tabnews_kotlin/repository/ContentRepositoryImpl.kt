@@ -8,7 +8,6 @@ import com.github.rphlfc.tabnews_kotlin.model.APIResult
 import com.github.rphlfc.tabnews_kotlin.model.CommentRequest
 import com.github.rphlfc.tabnews_kotlin.model.Content
 import com.github.rphlfc.tabnews_kotlin.model.ContentRequest
-import com.github.rphlfc.tabnews_kotlin.model.ErrorResponse
 import com.github.rphlfc.tabnews_kotlin.model.PublishStatus
 import com.github.rphlfc.tabnews_kotlin.model.Strategy
 import com.github.rphlfc.tabnews_kotlin.model.TabcoinsRequest
@@ -22,7 +21,6 @@ internal class ContentRepositoryImpl(
     private val cacheManager: CacheManager
 ) : ContentRepository {
 
-
     override suspend fun getContents(
         page: Int,
         perPage: Int,
@@ -30,7 +28,7 @@ internal class ContentRepositoryImpl(
         clearCache: Boolean
     ): APIResult<List<Content>> {
         if (clearCache) {
-            refreshContents(strategy.param)
+            clearContentsCache(strategy.param)
         }
 
         return try {
@@ -68,7 +66,7 @@ internal class ContentRepositoryImpl(
         }
     }
 
-    private suspend fun refreshContents(strategy: String) {
+    private suspend fun clearContentsCache(strategy: String) {
         withContext(Dispatchers.IO) {
             cacheManager.invalidateCache(strategy)
         }
@@ -82,7 +80,7 @@ internal class ContentRepositoryImpl(
         if (clearCache) {
             cacheManager.getPostDetailByUsernameAndSlug(ownerUsername, slug)?.let {
                 val content = it.toContent()
-                refreshPostDetail(content)
+                clearPostDetailCache(content)
             }
         }
 
@@ -121,7 +119,7 @@ internal class ContentRepositoryImpl(
         }
     }
 
-    private suspend fun refreshPostDetail(content: Content) {
+    private suspend fun clearPostDetailCache(content: Content) {
         withContext(Dispatchers.IO) {
             cacheManager.invalidateCache(content)
         }
