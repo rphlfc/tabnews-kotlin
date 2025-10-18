@@ -8,7 +8,7 @@ Add the following to your `build.gradle.kts` (module level):
 
 ```kotlin
 dependencies {
-    implementation("com.github.rphlfc:tabnews-kotlin:1.0.1")
+    implementation("com.github.rphlfc:tabnews-kotlin:1.0.2")
 }
 ```
 
@@ -313,7 +313,7 @@ val apiClient = APIClient.Builder(context)
 
 ## Requirements
 
-- Android API 24+ (Android 7.0)
+- Android API 23+ (Android 6.0)
 - Kotlin 1.8+
 
 ## Contributing
@@ -325,6 +325,13 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 For issues and questions, please open an issue on the GitHub repository.
 
 ## Changelog
+
+### 1.0.2
+- BREAKING: `AuthRepository.login()` now returns `APIResult<LoginResponse>` instead of `Result<LoginResponse>`.
+- Internal refactoring: split repository interfaces and implementations into separate files for better code organization.
+- Centralized error handling with `ErrorHandler` object to reduce code duplication.
+- Improved `CacheCleanupManager` with `stopPeriodicCleanup()` method.
+- Code cleanup: simplified logic in various classes, removed redundant code.
 
 ### 1.0.1
 - BREAKING: `ContentRepository` methods now return `APIResult<T>` instead of `Result<T>`:
