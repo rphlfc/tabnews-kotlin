@@ -1,7 +1,8 @@
 package com.github.rphlfc.tabnews_kotlin.repository
 
 import com.github.rphlfc.tabnews_kotlin.api.APIService
-import com.github.rphlfc.tabnews_kotlin.model.APIResult
+import com.github.rphlfc.tabnews_kotlin.api.APIResult
+import com.github.rphlfc.tabnews_kotlin.api.APIRequest
 import com.github.rphlfc.tabnews_kotlin.model.LoginRequest
 import com.github.rphlfc.tabnews_kotlin.model.LoginResponse
 import com.github.rphlfc.tabnews_kotlin.security.AuthManager
@@ -13,7 +14,7 @@ internal class AuthRepositoryImpl(
 
     override suspend fun login(email: String, password: String): APIResult<LoginResponse> {
         val request = LoginRequest(email = email, password = password)
-        return ErrorHandler.executeApiCall("Erro ao fazer login.") {
+        return APIRequest.executeApiCall("Erro ao fazer login.") {
             val response = api.login(request)
 
             authManager.setToken(

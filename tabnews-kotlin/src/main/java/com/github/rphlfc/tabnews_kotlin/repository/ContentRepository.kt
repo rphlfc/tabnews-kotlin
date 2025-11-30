@@ -1,6 +1,6 @@
 package com.github.rphlfc.tabnews_kotlin.repository
 
-import com.github.rphlfc.tabnews_kotlin.model.APIResult
+import com.github.rphlfc.tabnews_kotlin.api.APIResult
 import com.github.rphlfc.tabnews_kotlin.model.Content
 import com.github.rphlfc.tabnews_kotlin.model.PublishStatus
 import com.github.rphlfc.tabnews_kotlin.model.Strategy

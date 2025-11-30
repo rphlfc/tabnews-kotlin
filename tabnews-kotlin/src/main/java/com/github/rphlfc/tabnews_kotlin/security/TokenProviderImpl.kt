@@ -4,12 +4,6 @@ import android.content.Context
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
-interface TokenProvider {
-    fun getToken(): String?
-    fun setToken(token: String, userId: String, expiresAt: String)
-    fun clearToken()
-}
-
 class TokenProviderImpl(context: Context) : TokenProvider {
 
     private val masterKey = MasterKey.Builder(context)

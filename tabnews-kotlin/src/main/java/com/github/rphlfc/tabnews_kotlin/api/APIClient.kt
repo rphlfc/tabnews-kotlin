@@ -40,7 +40,8 @@ data class APIClientConfig(
 class APIClient private constructor(
     private val context: Context,
     private val apiService: APIService,
-    private val config: APIClientConfig
+    private val config: APIClientConfig,
+    private val tokenProvider: TokenProvider
 ) {
     class Builder(ctx: Context) {
 
@@ -63,7 +64,10 @@ class APIClient private constructor(
 
         fun build(): APIClient {
             val mediaType = "application/json".toMediaType()
-            val okBuilder = getOkBuilder(context)
+
+            val tokenProvider = TokenProviderImpl(context)
+
+            val okBuilder = getOkBuilder(context, tokenProvider)
             val okHttpClient = okBuilder.build()
 
             val retrofit = Retrofit.Builder()
@@ -74,12 +78,15 @@ class APIClient private constructor(
 
             val apiService = retrofit.create(APIService::class.java)
 
-            return APIClient(context, apiService, config).apply {
+            return APIClient(context, apiService, config, tokenProvider).apply {
                 initializeCacheCleanup()
             }
         }
 
-        private fun getOkBuilder(context: Context): OkHttpClient.Builder {
+        private fun getOkBuilder(
+            context: Context,
+            tokenProvider: TokenProvider
+        ): OkHttpClient.Builder {
             val logging = HttpLoggingInterceptor().apply {
                 level =
                     if (config.enableLogging) {
@@ -93,7 +100,7 @@ class APIClient private constructor(
                 .connectTimeout(config.connectTimeoutSeconds, TimeUnit.SECONDS)
                 .readTimeout(config.readTimeoutSeconds, TimeUnit.SECONDS)
                 .writeTimeout(config.writeTimeoutSeconds, TimeUnit.SECONDS)
-                .addInterceptor(AuthInterceptor(TokenProviderImpl(context)))
+                .addInterceptor(AuthInterceptor(tokenProvider))
                 .addInterceptor(logging)
         }
     }
@@ -112,10 +119,6 @@ class APIClient private constructor(
 
     private val cacheCleanupManager: CacheCleanupManager by lazy {
         CacheCleanupManager(context, cacheManager)
-    }
-
-    private val tokenProvider: TokenProvider by lazy {
-        TokenProviderImpl(context)
     }
 
     val authManager: AuthManager by lazy {

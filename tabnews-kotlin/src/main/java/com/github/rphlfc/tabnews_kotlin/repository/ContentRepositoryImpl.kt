@@ -1,10 +1,11 @@
 package com.github.rphlfc.tabnews_kotlin.repository
 
+import com.github.rphlfc.tabnews_kotlin.api.APIRequest
+import com.github.rphlfc.tabnews_kotlin.api.APIResult
 import com.github.rphlfc.tabnews_kotlin.api.APIService
 import com.github.rphlfc.tabnews_kotlin.cache.manager.CacheManager
 import com.github.rphlfc.tabnews_kotlin.cache.model.CachedContent
 import com.github.rphlfc.tabnews_kotlin.cache.model.CachedPostDetail
-import com.github.rphlfc.tabnews_kotlin.model.APIResult
 import com.github.rphlfc.tabnews_kotlin.model.CommentRequest
 import com.github.rphlfc.tabnews_kotlin.model.Content
 import com.github.rphlfc.tabnews_kotlin.model.ContentRequest
@@ -13,13 +14,26 @@ import com.github.rphlfc.tabnews_kotlin.model.Strategy
 import com.github.rphlfc.tabnews_kotlin.model.TabcoinsRequest
 import com.github.rphlfc.tabnews_kotlin.model.TabcoinsResponse
 import com.github.rphlfc.tabnews_kotlin.model.TransactionType
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 internal class ContentRepositoryImpl(
     private val api: APIService,
     private val cacheManager: CacheManager
 ) : ContentRepository {
+
+    private suspend fun <T> APIResult<T>.getOrFallbackToCache(
+        cacheProvider: suspend () -> T?
+    ): APIResult<T> {
+        return if (this is APIResult.Failure) {
+            val cachedData = cacheProvider()
+            if (cachedData != null) {
+                APIResult.Success(cachedData)
+            } else {
+                this
+            }
+        } else {
+            this
+        }
+    }
 
     override suspend fun getContents(
         page: Int,
@@ -31,45 +45,46 @@ internal class ContentRepositoryImpl(
             clearContentsCache(strategy.param)
         }
 
+        if (!clearCache) {
+            val cachedContents = cacheManager.getContents(strategy.param, page)
+            if (cachedContents != null && cachedContents.isNotEmpty()) {
+                val contents = cachedContents.map { it.toContent() }
+                return APIResult.Success(contents)
+            }
+        }
+
+        val result = APIRequest.executeApiCall("Erro ao carregar conteúdos.") {
+            val contents =
+                api.getContents(page = page, perPage = perPage, strategy = strategy.param)
+
+            val cachedContentsToStore = contents.map { content ->
+                CachedContent.fromContent(content, strategy.param, page)
+            }
+            cacheManager.cacheContents(cachedContentsToStore, strategy.param, page)
+
+            contents
+        }
+
+        return result.getOrFallbackToCache {
+            getCachedContents(strategy.param, page)
+        }
+    }
+
+    private suspend fun getCachedContents(strategy: String, page: Int): List<Content>? {
         return try {
-            withContext(Dispatchers.IO) {
-                val cachedContents = cacheManager.getContents(strategy.param, page)
-
-                if (cachedContents != null && cachedContents.isNotEmpty()) {
-                    val contents = cachedContents.map { it.toContent() }
-                    APIResult.Success(contents)
-                } else {
-                    val contents =
-                        api.getContents(page = page, perPage = perPage, strategy = strategy.param)
-
-                    val cachedContentsToStore = contents.map { content ->
-                        CachedContent.fromContent(content, strategy.param, page)
-                    }
-                    cacheManager.cacheContents(cachedContentsToStore, strategy.param, page)
-
-                    APIResult.Success(contents)
-                }
+            val cachedContents = cacheManager.getContents(strategy, page)
+            if (cachedContents != null && cachedContents.isNotEmpty()) {
+                cachedContents.map { it.toContent() }
+            } else {
+                null
             }
-        } catch (e: Exception) {
-            val error = ErrorHandler.mapExceptionToError(e, "Erro ao carregar conteúdos.")
-            return try {
-                val cachedContents = cacheManager.getContents(strategy.param, page)
-                if (cachedContents != null && cachedContents.isNotEmpty()) {
-                    val contents = cachedContents.map { it.toContent() }
-                    APIResult.Success(contents)
-                } else {
-                    APIResult.Failure(error)
-                }
-            } catch (_: Exception) {
-                APIResult.Failure(error)
-            }
+        } catch (_: Exception) {
+            null
         }
     }
 
     private suspend fun clearContentsCache(strategy: String) {
-        withContext(Dispatchers.IO) {
-            cacheManager.invalidateCache(strategy)
-        }
+        cacheManager.invalidateCache(strategy)
     }
 
     override suspend fun getPostDetail(
@@ -78,49 +93,43 @@ internal class ContentRepositoryImpl(
         clearCache: Boolean
     ): APIResult<Content> {
         if (clearCache) {
-            cacheManager.getPostDetailByUsernameAndSlug(ownerUsername, slug)?.let {
-                val content = it.toContent()
-                clearPostDetailCache(content)
+            clearPostDetailCache(ownerUsername, slug)
+        }
+
+        if (!clearCache) {
+            val cachedPostDetail = cacheManager.getPostDetailByUsernameAndSlug(ownerUsername, slug)
+            if (cachedPostDetail != null) {
+                val content = cachedPostDetail.toContent()
+                return APIResult.Success(content)
             }
         }
 
-        return try {
-            withContext(Dispatchers.IO) {
-                val cachedPostDetail =
-                    cacheManager.getPostDetailByUsernameAndSlug(ownerUsername, slug)
+        val result = APIRequest.executeApiCall("Erro ao carregar detalhes do post.") {
+            val content = api.getContentDetail(ownerUsername, slug)
 
-                if (cachedPostDetail != null) {
-                    val content = cachedPostDetail.toContent()
-                    APIResult.Success(content)
+            val cachedPostDetailToStore = CachedPostDetail.fromContent(content)
+            cacheManager.cachePostDetail(cachedPostDetailToStore)
 
-                } else {
-                    val content = api.getContentDetail(ownerUsername, slug)
+            content
+        }
 
-                    val cachedPostDetailToStore = CachedPostDetail.fromContent(content)
-                    cacheManager.cachePostDetail(cachedPostDetailToStore)
-
-                    APIResult.Success(content)
-                }
-            }
-        } catch (e: Exception) {
-            val error = ErrorHandler.mapExceptionToError(e, "Erro ao carregar detalhes do post.")
-            return try {
-                val cachedPostDetail =
-                    cacheManager.getPostDetailByUsernameAndSlug(ownerUsername, slug)
-                if (cachedPostDetail != null) {
-                    val content = cachedPostDetail.toContent()
-                    APIResult.Success(content)
-                } else {
-                    APIResult.Failure(error)
-                }
-            } catch (_: Exception) {
-                APIResult.Failure(error)
-            }
+        return result.getOrFallbackToCache {
+            getCachedPostDetail(ownerUsername, slug)
         }
     }
 
-    private suspend fun clearPostDetailCache(content: Content) {
-        withContext(Dispatchers.IO) {
+    private suspend fun getCachedPostDetail(ownerUsername: String, slug: String): Content? {
+        return try {
+            val cachedPostDetail = cacheManager.getPostDetailByUsernameAndSlug(ownerUsername, slug)
+            cachedPostDetail?.toContent()
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private suspend fun clearPostDetailCache(ownerUsername: String, slug: String) {
+        cacheManager.getPostDetailByUsernameAndSlug(ownerUsername, slug)?.let {
+            val content = it.toContent()
             cacheManager.invalidateCache(content)
         }
     }
@@ -129,7 +138,7 @@ internal class ContentRepositoryImpl(
         ownerUsername: String,
         slug: String
     ): APIResult<List<Content>> {
-        return ErrorHandler.executeApiCall("Erro ao carregar comentários.") {
+        return APIRequest.executeApiCall("Erro ao carregar comentários.") {
             api.getComments(ownerUsername, slug)
         }
     }
@@ -140,7 +149,7 @@ internal class ContentRepositoryImpl(
         transactionType: TransactionType
     ): APIResult<TabcoinsResponse> {
         val request = TabcoinsRequest(transactionType = transactionType.rawValue)
-        return ErrorHandler.executeApiCall("Erro ao votar. Tente novamente.") {
+        return APIRequest.executeApiCall("Erro ao votar. Tente novamente.") {
             api.voteOnContent(ownerUsername = ownerUsername, slug = slug, request = request)
         }
     }
@@ -151,7 +160,7 @@ internal class ContentRepositoryImpl(
         status: PublishStatus
     ): APIResult<Content> {
         val request = CommentRequest(parentId = parent.id, body = body, status = status.rawValue)
-        return ErrorHandler.executeApiCall("Erro ao criar comentário.") {
+        return APIRequest.executeApiCall("Erro ao criar comentário.") {
             api.createComment(request)
         }
     }
@@ -164,7 +173,7 @@ internal class ContentRepositoryImpl(
         status: PublishStatus
     ): APIResult<Content> {
         val request = ContentRequest(title, body, status.rawValue, sourceUrl, slug)
-        return ErrorHandler.executeApiCall("Erro ao criar conteúdo.") {
+        return APIRequest.executeApiCall("Erro ao criar conteúdo.") {
             api.createContent(request)
         }
     }

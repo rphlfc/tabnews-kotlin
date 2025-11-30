@@ -1,14 +1,12 @@
-package com.github.rphlfc.tabnews_kotlin.repository
+package com.github.rphlfc.tabnews_kotlin.api
 
-import com.github.rphlfc.tabnews_kotlin.model.APIResult
 import com.github.rphlfc.tabnews_kotlin.model.ErrorResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import retrofit2.HttpException
 
-internal object ErrorHandler {
+internal object APIRequest {
 
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
 

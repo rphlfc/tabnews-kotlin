@@ -1,6 +1,6 @@
 package com.github.rphlfc.tabnews_kotlin.repository
 
-import com.github.rphlfc.tabnews_kotlin.model.APIResult
+import com.github.rphlfc.tabnews_kotlin.api.APIResult
 import com.github.rphlfc.tabnews_kotlin.model.LoginResponse
 
 interface AuthRepository {
