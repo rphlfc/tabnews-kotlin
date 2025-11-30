@@ -38,7 +38,9 @@ val authManager = apiClient.authManager
 ### Fetching Content
 
 ```kotlin
-val result = contentRepository.getContents(page = 1, perPage = 20, strategy = "relevant")
+import com.github.rphlfc.tabnews_kotlin.model.Strategy
+
+val result = contentRepository.getContents(page = 1, perPage = 20, strategy = Strategy.RELEVANT)
 
 result.onSuccess { contents ->
     contents.forEach { println("Title: ${it.title}") }
@@ -70,13 +72,13 @@ authRepository.logout()
 ### Creating Content
 
 ```kotlin
-val contentRequest = ContentRequest(
+import com.github.rphlfc.tabnews_kotlin.model.PublishStatus
+
+contentRepository.createContent(
     title = "O título da publicação.",
     body = "O corpo da sua publicação.",
-    status = "published"
+    status = PublishStatus.PUBLISHED
 )
-
-contentRepository.createContent(contentRequest)
     .onSuccess { println("Content created: ${it.id}") }
     .onFailure { println("Error: ${it.message}") }
 ```
@@ -91,6 +93,141 @@ val apiClient = APIClient.Builder(context)
     .dispatcher(Dispatchers.IO)
     .json(Json { ignoreUnknownKeys = true; isLenient = true })
     .build()
+```
+
+## Usage Patterns
+
+### Singleton Pattern
+
+You can create a singleton instance of `APIClient` to use throughout your application:
+
+```kotlin
+import android.content.Context
+import com.github.rphlfc.tabnews_kotlin.api.APIClient
+
+object TabNewsClient {
+    @Volatile
+    private var instance: APIClient? = null
+    
+    fun getInstance(context: Context): APIClient {
+        return instance ?: synchronized(this) {
+            instance ?: APIClient.Builder(context)
+                .enableLogging(true)
+                .build()
+                .also { instance = it }
+        }
+    }
+}
+
+// Usage in your Activity/Fragment
+class MainActivity : AppCompatActivity() {
+    private val apiClient = TabNewsClient.getInstance(this)
+    
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        
+        val contentRepository = apiClient.contentRepository
+        // Use repositories...
+    }
+}
+```
+
+### Dependency Injection
+
+#### Using Hilt
+
+First, add Hilt to your project and create a module:
+
+```kotlin
+import android.content.Context
+import com.github.rphlfc.tabnews_kotlin.api.APIClient
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
+
+@Module
+@InstallIn(SingletonComponent::class)
+object TabNewsModule {
+    
+    @Provides
+    @Singleton
+    fun provideAPIClient(@ApplicationContext context: Context): APIClient {
+        return APIClient.Builder(context)
+            .enableLogging(true)
+            .build()
+    }
+    
+    @Provides
+    fun provideContentRepository(apiClient: APIClient) = apiClient.contentRepository
+    
+    @Provides
+    fun provideAuthRepository(apiClient: APIClient) = apiClient.authRepository
+    
+    @Provides
+    fun provideUserRepository(apiClient: APIClient) = apiClient.userRepository
+    
+    @Provides
+    fun provideAuthManager(apiClient: APIClient) = apiClient.authManager
+}
+```
+
+Then inject it into your classes:
+
+```kotlin
+import com.github.rphlfc.tabnews_kotlin.repository.ContentRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
+@HiltViewModel
+class ContentViewModel @Inject constructor(
+    private val contentRepository: ContentRepository
+) : ViewModel() {
+    
+    fun loadContents() {
+        viewModelScope.launch {
+            contentRepository.getContents(page = 1, perPage = 20)
+                .onSuccess { contents ->
+                    // Handle success
+                }
+                .onFailure { error ->
+                    // Handle error
+                }
+        }
+    }
+}
+```
+
+#### Manual Dependency Injection
+
+You can also use manual constructor injection:
+
+```kotlin
+import com.github.rphlfc.tabnews_kotlin.api.APIClient
+import com.github.rphlfc.tabnews_kotlin.repository.ContentRepository
+
+class ContentViewModel(
+    private val contentRepository: ContentRepository
+) : ViewModel() {
+    // Use contentRepository...
+}
+
+// In your Activity/Fragment
+class MainActivity : AppCompatActivity() {
+    private lateinit var viewModel: ContentViewModel
+    
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        
+        val apiClient = APIClient.Builder(this)
+            .enableLogging(true)
+            .build()
+        
+        viewModel = ContentViewModel(apiClient.contentRepository)
+    }
+}
 ```
 
 ## API Reference
