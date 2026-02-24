@@ -22,6 +22,16 @@ internal interface APIService {
         @Query("strategy") strategy: String = "relevant"
     ): List<Content>
 
+    @GET("api/v1/contents/{username}")
+    suspend fun getUserContents(
+        @Path("username") username: String,
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 20,
+        @Query("strategy") strategy: String = "new",
+        @Query("with_children") withChildren: Boolean = true,
+        @Query("with_root") withRoot: Boolean = true
+    ): List<Content>
+
     @GET("api/v1/contents/{owner_username}/{slug}")
     suspend fun getContentDetail(
         @Path("owner_username") ownerUsername: String,

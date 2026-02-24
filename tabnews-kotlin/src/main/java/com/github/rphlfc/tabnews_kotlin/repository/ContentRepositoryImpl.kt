@@ -134,6 +134,26 @@ internal class ContentRepositoryImpl(
         }
     }
 
+    override suspend fun getContentsByUser(
+        username: String,
+        page: Int,
+        perPage: Int,
+        strategy: Strategy,
+        withChildren: Boolean,
+        withRoot: Boolean
+    ): APIResult<List<Content>> {
+        return APIRequest.executeApiCall("Erro ao carregar conteúdos do usuário.") {
+            api.getUserContents(
+                username = username,
+                page = page,
+                perPage = perPage,
+                strategy = strategy.param,
+                withChildren = withChildren,
+                withRoot = withRoot
+            )
+        }
+    }
+
     override suspend fun getComments(
         ownerUsername: String,
         slug: String

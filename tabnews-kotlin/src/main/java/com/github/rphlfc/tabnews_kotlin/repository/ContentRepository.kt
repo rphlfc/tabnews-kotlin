@@ -21,6 +21,15 @@ interface ContentRepository {
         clearCache: Boolean = false
     ): APIResult<Content>
 
+    suspend fun getContentsByUser(
+        username: String,
+        page: Int = 1,
+        perPage: Int = 20,
+        strategy: Strategy = Strategy.RELEVANT,
+        withChildren: Boolean = true,
+        withRoot: Boolean = true
+    ): APIResult<List<Content>>
+
     suspend fun getComments(
         ownerUsername: String,
         slug: String
