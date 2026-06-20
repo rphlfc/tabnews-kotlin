@@ -7,10 +7,10 @@ import kotlinx.serialization.SerialName
 data class User(
     val id: String,
     val username: String,
-    val email: String,
-    val description: String,
-    val notifications: Boolean,
-    val features: List<String>,
+    val email: String? = null,
+    val description: String = "",
+    val notifications: Boolean? = null,
+    val features: List<String> = emptyList(),
     val tabcoins: Int,
     val tabcash: Int,
     @SerialName("created_at")

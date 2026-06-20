@@ -246,6 +246,7 @@ class MainActivity : AppCompatActivity() {
 
 ### UserRepository
 - `getLoggedUser()`: Get current user profile (requires auth)
+- `getUserByUsername(username)`: Get public profile by username
 
 ### AuthManager
 - `isLoggedIn()`: Check authentication status

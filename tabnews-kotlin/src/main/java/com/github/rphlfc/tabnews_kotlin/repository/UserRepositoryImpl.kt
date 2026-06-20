@@ -14,5 +14,11 @@ internal class UserRepositoryImpl(
             api.getUserProfile()
         }
     }
+
+    override suspend fun getUserByUsername(username: String): APIResult<User> {
+        return APIRequest.executeApiCall("Erro ao carregar perfil do usuário") {
+            api.getUserByUsername(username)
+        }
+    }
 }
 

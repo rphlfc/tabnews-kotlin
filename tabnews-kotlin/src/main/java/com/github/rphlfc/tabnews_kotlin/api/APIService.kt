@@ -55,6 +55,9 @@ internal interface APIService {
         @Body request: TabcoinsRequest
     ): TabcoinsResponse
 
+    @GET("api/v1/users/{username}")
+    suspend fun getUserByUsername(@Path("username") username: String): User
+
     @AuthRequired
     @GET("api/v1/user")
     suspend fun getUserProfile(): User
