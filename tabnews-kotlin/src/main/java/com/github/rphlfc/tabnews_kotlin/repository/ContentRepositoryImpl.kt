@@ -197,4 +197,22 @@ internal class ContentRepositoryImpl(
             api.createContent(request)
         }
     }
+
+    override suspend fun getContentParent(
+        ownerUsername: String,
+        slug: String
+    ): APIResult<Content> {
+        return APIRequest.executeApiCall("Erro ao carregar comentário pai.") {
+            api.getContentParent(ownerUsername, slug)
+        }
+    }
+
+    override suspend fun getContentRoot(
+        ownerUsername: String,
+        slug: String
+    ): APIResult<Content> {
+        return APIRequest.executeApiCall("Erro ao carregar publicação raiz.") {
+            api.getContentRoot(ownerUsername, slug)
+        }
+    }
 }

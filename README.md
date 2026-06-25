@@ -6,7 +6,7 @@ A Kotlin library wrapper for the TabNews API, providing a clean interface for An
 
 ```kotlin
 dependencies {
-    implementation("com.github.rphlfc:tabnews-kotlin:1.0.3")
+    implementation("com.github.rphlfc:tabnews-kotlin:1.0.6")
 }
 ```
 
@@ -235,10 +235,13 @@ class MainActivity : AppCompatActivity() {
 ### ContentRepository
 - `getContents(page, perPage, strategy, clearCache)`: Get paginated content list
 - `getPostDetail(ownerUsername, slug, clearCache)`: Get post details
-- `getComments(ownerUsername, slug)`: Get comments
-- `createContent(contentRequest)`: Create content (requires auth)
-- `createComment(commentRequest)`: Create comment (requires auth)
-- `tabcoins(ownerUsername, slug, transactionType)`: Vote on content
+- `getContentsByUser(username, page, perPage, strategy, withChildren, withRoot)`: Get posts by a specific user
+- `getComments(ownerUsername, slug)`: Get comments for a post
+- `getContentParent(ownerUsername, slug)`: Get the parent content of a comment
+- `getContentRoot(ownerUsername, slug)`: Get the root post of a thread
+- `createContent(title, body, slug, sourceUrl, status)`: Create content (requires auth)
+- `createComment(parent, body, status)`: Create comment (requires auth)
+- `tabcoins(ownerUsername, slug, transactionType)`: Vote on content (requires auth)
 
 ### AuthRepository
 - `login(email, password)`: Authenticate user
@@ -259,6 +262,16 @@ class MainActivity : AppCompatActivity() {
 - Kotlin 1.8+
 
 ## Changelog
+
+### 1.0.6
+- Added `getContentParent(ownerUsername, slug)` to `ContentRepository` — fetches the parent content of a comment
+- Added `getContentRoot(ownerUsername, slug)` to `ContentRepository` — fetches the root post of a thread
+
+### 1.0.5
+- Added `getUserByUsername(username)` to `UserRepository` — fetches a public user profile by username
+
+### 1.0.4
+- Added `getContentsByUser(username, ...)` to `ContentRepository` — fetches paginated posts by a specific user
 
 ### 1.0.3
 - Refactored API error handling: `ErrorHandler` renamed to `APIRequest` and moved to `api` package
