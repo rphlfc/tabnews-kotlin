@@ -44,6 +44,18 @@ internal interface APIService {
         @Path("slug") slug: String
     ): List<Content>
 
+    @GET("api/v1/contents/{owner_username}/{slug}/parent")
+    suspend fun getContentParent(
+        @Path("owner_username") ownerUsername: String,
+        @Path("slug") slug: String
+    ): Content
+
+    @GET("api/v1/contents/{owner_username}/{slug}/root")
+    suspend fun getContentRoot(
+        @Path("owner_username") ownerUsername: String,
+        @Path("slug") slug: String
+    ): Content
+
     @POST("api/v1/sessions")
     suspend fun login(@Body request: LoginRequest): LoginResponse
 

@@ -54,4 +54,14 @@ interface ContentRepository {
         sourceUrl: String? = null,
         status: PublishStatus = PublishStatus.PUBLISHED
     ): APIResult<Content>
+
+    suspend fun getContentParent(
+        ownerUsername: String,
+        slug: String
+    ): APIResult<Content>
+
+    suspend fun getContentRoot(
+        ownerUsername: String,
+        slug: String
+    ): APIResult<Content>
 }
