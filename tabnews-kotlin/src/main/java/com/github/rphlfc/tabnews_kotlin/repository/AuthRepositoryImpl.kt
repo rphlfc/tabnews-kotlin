@@ -28,7 +28,14 @@ internal class AuthRepositoryImpl(
     }
 
     override suspend fun logout() {
-        authManager.logout()
+        try {
+            api.logout()
+        } catch (_: Exception) {
+            // Ignore network/session errors: the local session must be cleared regardless
+            // so the user is logged out even if the server-side request fails.
+        } finally {
+            authManager.logout()
+        }
     }
 }
 

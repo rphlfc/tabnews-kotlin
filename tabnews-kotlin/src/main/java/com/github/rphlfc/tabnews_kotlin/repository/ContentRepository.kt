@@ -55,6 +55,15 @@ interface ContentRepository {
         status: PublishStatus = PublishStatus.PUBLISHED
     ): APIResult<Content>
 
+    suspend fun editContent(
+        ownerUsername: String,
+        slug: String,
+        title: String? = null,
+        body: String? = null,
+        sourceUrl: String? = null,
+        status: PublishStatus? = null
+    ): APIResult<Content>
+
     suspend fun getContentParent(
         ownerUsername: String,
         slug: String

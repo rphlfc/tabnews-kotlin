@@ -40,7 +40,7 @@ publishing {
         create<MavenPublication>("release") {
             groupId = "com.github.rphlfc"
             artifactId = "tabnews-kotlin"
-            version = "1.0.6"
+            version = "1.0.7"
 
             pom {
                 name.set("TabNews Kotlin")

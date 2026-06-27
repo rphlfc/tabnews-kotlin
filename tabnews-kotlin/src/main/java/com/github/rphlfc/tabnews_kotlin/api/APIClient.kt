@@ -33,6 +33,7 @@ data class APIClientConfig(
     val json: Json = Json {
         ignoreUnknownKeys = true
         isLenient = true
+        explicitNulls = false
     },
     val dispatcher: CoroutineDispatcher = Dispatchers.IO
 )

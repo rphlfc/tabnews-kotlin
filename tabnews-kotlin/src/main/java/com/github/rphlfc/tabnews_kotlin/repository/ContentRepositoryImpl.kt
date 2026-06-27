@@ -9,6 +9,7 @@ import com.github.rphlfc.tabnews_kotlin.cache.model.CachedPostDetail
 import com.github.rphlfc.tabnews_kotlin.model.CommentRequest
 import com.github.rphlfc.tabnews_kotlin.model.Content
 import com.github.rphlfc.tabnews_kotlin.model.ContentRequest
+import com.github.rphlfc.tabnews_kotlin.model.ContentUpdateRequest
 import com.github.rphlfc.tabnews_kotlin.model.PublishStatus
 import com.github.rphlfc.tabnews_kotlin.model.Strategy
 import com.github.rphlfc.tabnews_kotlin.model.TabcoinsRequest
@@ -195,6 +196,27 @@ internal class ContentRepositoryImpl(
         val request = ContentRequest(title, body, status.rawValue, sourceUrl, slug)
         return APIRequest.executeApiCall("Erro ao criar conteúdo.") {
             api.createContent(request)
+        }
+    }
+
+    override suspend fun editContent(
+        ownerUsername: String,
+        slug: String,
+        title: String?,
+        body: String?,
+        sourceUrl: String?,
+        status: PublishStatus?
+    ): APIResult<Content> {
+        val request = ContentUpdateRequest(
+            title = title,
+            body = body,
+            status = status?.rawValue,
+            sourceUrl = sourceUrl
+        )
+        return APIRequest.executeApiCall("Erro ao editar conteúdo.") {
+            val content = api.editContent(ownerUsername, slug, request)
+            cacheManager.invalidateCache(content)
+            content
         }
     }
 
