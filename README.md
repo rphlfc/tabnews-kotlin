@@ -6,7 +6,7 @@ A Kotlin library wrapper for the TabNews API, providing a clean interface for An
 
 ```kotlin
 dependencies {
-    implementation("com.github.rphlfc:tabnews-kotlin:1.0.6")
+    implementation("com.github.rphlfc:tabnews-kotlin:1.0.7")
 }
 ```
 
