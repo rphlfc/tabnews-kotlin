@@ -3,13 +3,17 @@ package com.github.rphlfc.tabnews_kotlin.api
 import com.github.rphlfc.tabnews_kotlin.model.CommentRequest
 import com.github.rphlfc.tabnews_kotlin.model.Content
 import com.github.rphlfc.tabnews_kotlin.model.ContentRequest
+import com.github.rphlfc.tabnews_kotlin.model.ContentUpdateRequest
 import com.github.rphlfc.tabnews_kotlin.model.LoginRequest
 import com.github.rphlfc.tabnews_kotlin.model.LoginResponse
 import com.github.rphlfc.tabnews_kotlin.model.TabcoinsRequest
 import com.github.rphlfc.tabnews_kotlin.model.TabcoinsResponse
 import com.github.rphlfc.tabnews_kotlin.model.User
+import com.github.rphlfc.tabnews_kotlin.model.UserUpdateRequest
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -58,6 +62,25 @@ internal interface APIService {
 
     @POST("api/v1/sessions")
     suspend fun login(@Body request: LoginRequest): LoginResponse
+
+    @AuthRequired
+    @DELETE("api/v1/sessions")
+    suspend fun logout(): LoginResponse
+
+    @AuthRequired
+    @PATCH("api/v1/contents/{owner_username}/{slug}")
+    suspend fun editContent(
+        @Path("owner_username") ownerUsername: String,
+        @Path("slug") slug: String,
+        @Body request: ContentUpdateRequest
+    ): Content
+
+    @AuthRequired
+    @PATCH("api/v1/users/{username}")
+    suspend fun updateUser(
+        @Path("username") username: String,
+        @Body request: UserUpdateRequest
+    ): User
 
     @AuthRequired
     @POST("api/v1/contents/{owner_username}/{slug}/tabcoins")

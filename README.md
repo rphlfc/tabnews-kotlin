@@ -83,6 +83,34 @@ contentRepository.createContent(
     .onFailure { println("Error: ${it.message}") }
 ```
 
+### Editing Content
+
+Only the fields you pass are updated; omitted fields are left unchanged.
+
+```kotlin
+contentRepository.editContent(
+    ownerUsername = "your_username",
+    slug = "o-titulo-da-publicacao",
+    body = "O novo corpo da publicação."
+)
+    .onSuccess { println("Content updated: ${it.id}") }
+    .onFailure { println("Error: ${it.message}") }
+```
+
+### Updating a Profile
+
+Only the fields you pass are updated; omitted fields are left unchanged.
+
+```kotlin
+userRepository.updateUser(
+    username = "your_username",
+    description = "Nova descrição do perfil.",
+    notifications = true
+)
+    .onSuccess { println("Profile updated: ${it.username}") }
+    .onFailure { println("Error: ${it.message}") }
+```
+
 ## Configuration
 
 ```kotlin
@@ -241,15 +269,17 @@ class MainActivity : AppCompatActivity() {
 - `getContentRoot(ownerUsername, slug)`: Get the root post of a thread
 - `createContent(title, body, slug, sourceUrl, status)`: Create content (requires auth)
 - `createComment(parent, body, status)`: Create comment (requires auth)
+- `editContent(ownerUsername, slug, title, body, sourceUrl, status)`: Edit an existing post or comment; only the provided fields are updated (requires auth)
 - `tabcoins(ownerUsername, slug, transactionType)`: Vote on content (requires auth)
 
 ### AuthRepository
 - `login(email, password)`: Authenticate user
-- `logout()`: Clear authentication
+- `logout()`: Invalidate the session on the server and clear the local token (the local session is always cleared, even if the server request fails)
 
 ### UserRepository
 - `getLoggedUser()`: Get current user profile (requires auth)
 - `getUserByUsername(username)`: Get public profile by username
+- `updateUser(username, newUsername, email, password, description, notifications)`: Update a user profile; only the provided fields are updated (requires auth)
 
 ### AuthManager
 - `isLoggedIn()`: Check authentication status
@@ -262,6 +292,11 @@ class MainActivity : AppCompatActivity() {
 - Kotlin 1.8+
 
 ## Changelog
+
+### 1.0.7
+- Added `editContent(ownerUsername, slug, ...)` to `ContentRepository` — edits an existing post or comment via `PATCH /contents/{username}/{slug}` (only provided fields are updated)
+- Added `updateUser(username, ...)` to `UserRepository` — updates a user profile via `PATCH /users/{username}` (only provided fields are updated)
+- `AuthRepository.logout()` now invalidates the session on the server via `DELETE /sessions` before clearing the local token (the local session is always cleared, even if the server request fails)
 
 ### 1.0.6
 - Added `getContentParent(ownerUsername, slug)` to `ContentRepository` — fetches the parent content of a comment
